@@ -1,16 +1,13 @@
-from array import array
-from ast import ListComp
-from re import M
-from sre_constants import CH_LOCALE
+from string import printable
 from typing import List
 import colorama as col
+from numpy import true_divide
 import imageToAscii
 from time import sleep
 from random import randint
 from os import system
 from time import time
 from itertools import zip_longest
-from numpy import concatenate
 col.init(autoreset=True)
 
 class imageClass:
@@ -118,6 +115,9 @@ class Character:
         if randint(0,(self.defence/10)) == 0:
             self.HP -= damage
             print(f"{self.name} took {damage} damage")
+            if self.HP <= 0:
+                self.alive = False
+                print(f"{self.name} died")
         else:
             self.HP -= (damage/2)
             print(f"{self.name} took {damage/2} damage")
@@ -125,8 +125,13 @@ class Character:
     def takeTruedamage(self, damage: int):
         self.HP -= damage
         print(f"{self.name} took {damage} damage")
+        if self.HP <= 0:
+            self.alive = False
+            print(f"{self.name} died")
+
     def heal(self, heal: int):
         self.HP += heal
+        print(f"{self.name} healed {heal} HP")
     
 class day:
     def __init__(self, apparition: bool, eliteApparition: bool = False):
@@ -163,7 +168,7 @@ class battle:
         self.hostileCharacters = []
 
         for character in characters:
-            if character.friendly == True:
+            if character.friendly:
                 self.friendlyCharacters.append(character)
             else:
                 self.hostileCharacters.append(character)
@@ -171,12 +176,12 @@ class battle:
         whoGoesFirst = randint(0,1)
         wait(2)
         while 1:
+            self.printBattle(self.friendlyCharacters, self.hostileCharacters)
             for fC in self.friendlyCharacters:
                 if whoGoesFirst == 0: #  if the coinflip returns 0 then it skips the friendlies turn for the first round, making the hostiles go first
                     whoGoesFirst =  1
                     break
-                print("Your party Goes first! ")
-                if fC.MC == True: #  if the friendly character is the main character give them some choices on the attack
+                if fC.MC: #  if the friendly character is the main character give them some choices on the attack
                     print("What do you want to do?")
                     print_lines(
                         f"1 - Basic Attack: {fC.equippedWeapon.damage}",
@@ -187,23 +192,17 @@ class battle:
                     IN = input("> ")
                     if IN == "1":
                         for hC in self.hostileCharacters:
-                            if hC.alive == True:
+                            if hC.alive and fC.alive:
                                 hC.takeDamage(fC.equippedWeapon.damage)
-                                if hC.HP <= 0:
-                                    hC.alive = False
-                                    print(f"{hC.name} has been defeated!")
                                 break
                             else:
                                 pass
                     elif IN == "2":
                         for hC in self.hostileCharacters:
                             if fC.PP > fC.equippedWeapon.PP/2:
-                                if hC.alive == True:
+                                if hC.alive and fC.alive:
                                     hC.takeTruedamage(fC.equippedWeapon.PP)
                                     fC.PP -= fC.equippedWeapon.PP/2
-                                    if hC.HP <= 0:
-                                        hC.alive = False
-                                        print(f"{hC.name} has been defeated!")
                                     break
                                 else:
                                     pass
@@ -214,37 +213,31 @@ class battle:
                                                        
                 else: #  if the character isn't a main character we just do the damage that their weapon does
                     for hC in self.hostileCharacters:
-                        if hC.alive == True:
+                        if hC.alive and fC.alive:
                             hC.takedamage(fC.equippedWeapon.damage)
-                            if hC.HP <= 0:
-                                hC.alive = False
-                                print(f"{hC.name} has been defeated!")
                             break
                         else:
                             pass
-                    
-                    result = all(hC.alive == False for hC in self.hostileCharacters)
-                    if result:
-                        print("You have defeated all the enemies!")
-                        return True #  if all enemies are dead return True, a victory
-                    else: 
-                        pass
             for hC in self.hostileCharacters:
                 for fC in self.friendlyCharacters:
-                    if fC.alive == True:
+                    if fC.alive and hC.alive:
                         fC.takeDamage(hC.equippedWeapon.damage)
-                        if fC.HP <= 0:
-                            fC.alive = False
-                            print(f"{fC.name} has been defeated!")
                         break
                     else: 
                         pass
-                result = all(fC.alive == False for fC in self.friendlyCharacters)
-                if result:
-                    print("Your party has been defeated!")
-                    return False #  if all friendlies are dead return False, a failure
-                else: 
-                    pass
+            result = all(not obj.alive for obj in self.friendlyCharacters)
+            if result:
+                print("Your party has been defeated!")
+                return False #  if all friendlies are dead return False, a failure
+            else: 
+                pass
+            print("!!!" + hC.alive for hC in self.hostileCharacters)
+            result = all(not hC.alive for hC in self.hostileCharacters)
+            if result:
+                print("You have defeated all the enemies!")
+                return True #  if all enemies are dead return True, a victory
+            else: 
+                pass
     
     def printBattle(self, friendlyCharacters: List[Character], hostileCharacters: List[Character]):
         for friendlychar, hostilechar in zip_longest(friendlyCharacters, hostileCharacters):
@@ -266,7 +259,7 @@ def main():
     system('cls')
     print("You begin your school day")
     wait(2)
-    if school() == True:
+    if school() is True:
         MainCharacter.maxPP += 10
         MainCharacter.PP += 10
         print("You have gained 10 PP")
