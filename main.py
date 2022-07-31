@@ -46,7 +46,7 @@ def displayImage(asciiImage, colour=col.Fore.WHITE) -> bool:
 def displayImageRange(asciiImageList, start, stop, step=1, colour=col.Fore.WHITE) -> bool:
     i = start
     while i < stop:
-        displayImage(colour + getStoredAscii()[i])
+        displayImage(colour + asciiImageList[i])
         i += step
     return True
 
@@ -97,9 +97,10 @@ class school:
 
 
 class Weapon:
-    def __init__(self, damage: int, PP: int):
+    def __init__(self, damage: int, PP: int, name: str = "Generic Sword"):
         self.damage = damage
         self.PP = PP
+        self.name = name
 
 
 class Character:
@@ -121,7 +122,7 @@ class Character:
         if randint(0, int(self.defence / 10)) == 0:
             self.HP -= damage
             print(f"{self.name} took {damage} damage")
-            if self.HP <= 0:
+            if int(self.HP) <= 0:
                 self.alive = False
                 print(f"{self.name} died")
         else:
@@ -192,9 +193,9 @@ class battle:
                     whoGoesFirst = 1
                     break
                 if fC.MC:  # if the friendly character is the main character give them some choices on the attack
-                    print("What do you want to do?")
+                    wait(1)
                     print_lines(
-                        f"1 - Basic Attack: {fC.equippedWeapon.damage}",
+                        f"1 - Basic Attack: {fC.equippedWeapon.damage} (chance of doing half damage with opponents defence)",
                         f"2 - Psychic Attack: {fC.equippedWeapon.PP}",
                         f"3 - Analyse - Grants increased critical chance for the next turn",
                         f"HP: {fC.HP} | PP: {fC.PP}"
@@ -203,6 +204,7 @@ class battle:
                     if IN == "1":
                         for hC in self.hostileCharacters:
                             if hC.alive and fC.alive:
+                                wait(1)
                                 hC.takeDamage(fC.equippedWeapon.damage)
                                 break
                             else:
@@ -211,6 +213,7 @@ class battle:
                         for hC in self.hostileCharacters:
                             if fC.PP > fC.equippedWeapon.PP / 2:
                                 if hC.alive and fC.alive:
+                                    wait(1)
                                     hC.takeTruedamage(fC.equippedWeapon.PP)
                                     fC.PP -= fC.equippedWeapon.PP / 2
                                     break
@@ -225,6 +228,7 @@ class battle:
                 else:  # if the character isn't a main character we just do the damage that their weapon does
                     for hC in self.hostileCharacters:
                         if hC.alive and fC.alive:
+                            wait(1)
                             hC.takeDamage(fC.equippedWeapon.damage)
                             break
                         else:
@@ -232,6 +236,7 @@ class battle:
             for hC in self.hostileCharacters:
                 for fC in self.friendlyCharacters:
                     if fC.alive and hC.alive:
+                        wait(1)
                         fC.takeDamage(hC.equippedWeapon.damage)
                         break
                     else:
@@ -252,7 +257,15 @@ class battle:
 
     def printBattle(self, friendlyCharacters: List[Character], hostileCharacters: List[Character]):
         for friendlychar, hostilechar in zip_longest(friendlyCharacters, hostileCharacters):
-            print(f"""{friendlychar.HP} {' ' * 20} {hostilechar.HP}""")
+            print(f"""{friendlychar.name} : {friendlychar.HP} {' ' * 20} {hostilechar.name} : {hostilechar.HP}""")
+
+
+def printInventory(inventory: dict):
+    for item in inventory:
+        if item.type == Weapon:
+            print(f"{col.Fore.BLUE}{item[0]} : {item[1]}")
+        else:
+            print(item)
 
 
 def main():
@@ -264,15 +277,16 @@ def main():
 
     currentDay = day(True, False)
 
-    MainCharacter = Character(100, 100, 100, 100, 10, {"Cursed Sword": 1}, True, True, Weapon(20, 20), True,
-                              input("What is your name? "))
+    MainCharacter = Character(100, 100, 100, 100, 10, {Weapon(20, 20, "Cursed Sword"): 1}, True, True, Weapon(20, 20),
+                              True, input("What is your name? "))
     print(
-        "You have recently moved to a new school for study, and you have a free period and decide to go straight to your dorm.\nYou walk into your dorm and see a student who introduces himself to you as your roommate, Xavier")
+        "You have recently moved to a new school for study, and you have a free period and decide to go straight to "
+        "your dorm.\nYou walk into your dorm and see a student who introduces himself to you as your roommate, Xavier")
     input(f"{col.Fore.YELLOW}Press any key to continue")
     system('cls')
     print("You begin your school day")
     wait(2)
-    if school() is True:
+    if school():
         MainCharacter.maxPP += 10
         MainCharacter.PP += 10
         print("You have gained 10 PP")
@@ -298,8 +312,10 @@ def main():
         imageToAscii.terminalDefault()
         print("Battle Starting", end="")
         enemy = Character(100, 100, 100, 100, 10, {}, False, False, Weapon(10, 10), True, "Thicc enemy dumptruck")
+        enemy2 = Character(100, 100, 100, 100, 10, {}, False, False, Weapon(10, 10), True, "not as thicc enemy")
+        friend1 = Character(100, 100, 100, 100, 100, {}, True, False, Weapon(20, 20), True, "Xavier")
         wait(2)
-        battle().start(MainCharacter, enemy)
+        battle().start(MainCharacter, friend1, enemy, enemy2)
 
     input(vars(MainCharacter))
 
