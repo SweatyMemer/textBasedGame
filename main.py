@@ -6,6 +6,7 @@ from random import randint
 from os import system
 from time import time
 from itertools import zip_longest
+from playsound import playsound
 
 col.init(autoreset=True)
 
@@ -51,60 +52,26 @@ def displayImageRange(asciiImageList, start, stop, step=1, colour=col.Fore.WHITE
     return True
 
 
-class school:
-    def __init__(self):
-        subject = randint(0, 2)
-        if subject == 0:
-            print("You choose to study maths")
-            self.maths()
-        elif subject == 1:
-            print("You choose to study maths")
-            self.maths()
-        elif subject == 2:
-            print("You choose to study maths")
-            self.maths()
-
-    def maths(self):
-        num1 = randint(0, 20)
-        num2 = randint(0, 20)
-        operator = randint(0, 1)
-        if operator == 0:
-            answer = num1 + num2
-            startTime = int(time())
-            userInput = input(f"{num1} + {num2} = ")
-            if userInput == str(answer) and int(time()) - startTime < 5:
-                print(f"Correct! {num1} + {num2} = {answer}")
-                return True
-            elif userInput != answer:
-                print(f"Your answer is wrong, the correct answer is {answer}")
-                return False
-            elif userInput == answer and int(time()) - startTime > 5:
-                print(f"Your answer is correct, but you took too long to answer, you have 5 seconds to answer.")
-                return False
-        elif operator == 1:
-            answer = num1 - num2
-            startTime = int(time())
-            userInput = input(f"{num1} - {num2} = ")
-            if userInput == str(answer) and int(time()) - startTime < 5:
-                print(f"Correct! {num1} - {num2} = {answer}")
-                return True
-            elif userInput != answer:
-                print(f"Your answer is wrong, the correct answer is {answer}")
-                return False
-            elif userInput == answer and int(time()) - startTime > 5:
-                print(f"Your answer is correct, but you took too long to answer, you have 5 seconds to answer.")
-                return False
+class HealthPot:
+    def __init__(self, healing: float, name: str):
+        self.healing = healing
+        self.name = name
+    def __repr__(self):
+        return f"Name, {self.name}, Healing {self.healing}"
 
 
 class Weapon:
-    def __init__(self, damage: int, PP: int, name: str = "Generic Sword"):
+    def __init__(self, damage: float, PP: float, name: str = "Generic Sword"):
         self.damage = damage
         self.PP = PP
         self.name = name
 
+    def __repr__(self):
+        return f"Name: {self.name}, Psychic Power: {self.PP}, Damage: {self.damage}"
+
 
 class Character:
-    def __init__(self, maxPP: int, PP: int, maxHP: int, HP: int, defence: int, inventory: dict, friendly: bool,
+    def __init__(self, maxPP: int, PP: int, maxHP: int, HP: int, defence: int, inventory: list, friendly: bool,
                  MC: bool, equippedWeapon: Weapon, alive: bool, name: str):
         self.maxPP = maxPP
         self.PP = PP
@@ -118,7 +85,7 @@ class Character:
         self.alive = alive
         self.name = name
 
-    def takeDamage(self, damage: int):
+    def takeDamage(self, damage: float):
         if randint(0, int(self.defence / 10)) == 0:
             self.HP -= damage
             print(f"{self.name} took {damage} damage")
@@ -128,8 +95,11 @@ class Character:
         else:
             self.HP -= (damage / 2)
             print(f"{self.name} took {damage / 2} damage")
+            if int(self.HP) <= 0:
+                self.alive = False
+                print(f"{self.name} died")
 
-    def takeTruedamage(self, damage: int):
+    def takeTruedamage(self, damage: float):
         self.HP -= damage
         print(f"{self.name} took {damage} damage")
         if self.HP <= 0:
@@ -137,8 +107,114 @@ class Character:
             print(f"{self.name} died")
 
     def heal(self, heal: int):
-        self.HP += heal
-        print(f"{self.name} healed {heal} HP")
+        startingHealth = self.HP
+
+        if self.HP + heal > self.maxHP:
+            self.HP = self.maxHP
+        else:
+            self.HP += heal
+
+        endingHealth = self.HP
+        print(f"{self.name} healed {endingHealth - startingHealth} HP")
+
+    def showInventory(self):
+        num = 0
+        for item in self.inventory:
+            print(f"{num} :: {item.name}")
+            num += 1
+
+    # idea for the inventory system
+    # make it a list
+    # print it in a for loop with the number of the list next to the item name
+    #
+    # num = 0
+    # for i in inventory: (the inventory is a list)
+    #     print({num} - {i})
+    #     num += 1
+
+    def selectItem(self):
+        self.showInventory()
+        print(
+            "select an item to use, choosing a weapon will swap it out for your current one, choosing any other item will use it accordingly")
+        item = input("item: ")
+        try:
+            item = int(item)
+        except:
+            print("DUDE LITERALLY TYPE A NUMBER IDOT")
+            self.selectItem()
+        if isinstance(self.inventory[item], Weapon):
+            self.inventory.append(self.equippedWeapon)  # put equipped weapon into inventory
+            self.equippedWeapon = self.inventory[item]
+            del self.inventory[item]
+            print(f"Current weapon {self.equippedWeapon}")
+        elif isinstance(self.inventory[item], HealthPot):
+            self.heal(self.inventory[item].healing)
+            del self.inventory[item]
+        elif isinstance(self.inventory[item], HealthPot) and self.inventory[item].name == f"{col.Fore.RED}HEALTH POT OF ORTH":
+            self.heal(self.inventory[item].healing)
+
+        # if isinstance(self.inventory[item], Weapon):
+        #     self.inventory[self.equippedWeapon.name] = self.equippedWeapon #  put equipped weapon into inventory
+        #     self.equippedWeapon = self.inventory[item] #  set the equipped weapon to the item
+        #     del self.inventory[item] #  delete the item from the list so that they don't have 2 of them
+        #     print(f"Current equipped weapon: {self.equippedWeapon}")
+        # elif isinstance(self.inventory[item], HealthPot):
+        #     self.heal(self.inventory[item].healing)
+        # else:
+        #     print(f"You can't use {item}, idot")
+
+
+class school():
+
+    def __init__(self, char: Character):
+        subject = randint(0, 2)
+        if subject == 0:
+            print("You choose to study maths")
+            self.maths(char)
+
+        elif subject == 1:
+            print("You choose to study maths")
+            self.maths(char)
+        elif subject == 2:
+            print("You choose to study maths")
+            self.maths(char)
+
+    def maths(self, char: Character):
+        num1 = randint(0, 20)
+        num2 = randint(0, 20)
+        operator = randint(0, 1)
+        if operator == 0:
+            answer = num1 + num2
+            startTime = int(time())
+            userInput = input(f"{num1} + {num2} = ")
+            if userInput == str(answer) and int(time()) - startTime < 5:
+                print(f"Correct! {num1} + {num2} = {answer}")
+                char.maxPP += 10
+                char.PP += 10
+                print(f"new maxPP is {char.maxPP}")
+                return True
+            elif userInput != answer:
+                print(f"Your answer is wrong, the correct answer is {answer}")
+                return False
+            elif userInput == answer and int(time()) - startTime > 5:
+                print(f"Your answer is correct, but you took too long to answer, you have 5 seconds to answer.")
+                return False
+        elif operator == 1:
+            answer = num1 - num2
+            startTime = int(time())
+            userInput = input(f"{num1} - {num2} = ")
+            if userInput == str(answer) and int(time()) - startTime < 5:
+                print(f"Correct! {num1} - {num2} = {answer}")
+                char.maxPP += 10
+                char.PP += 10
+                print(f"new max PP is {char.maxPP}")
+                return True
+            elif userInput != answer:
+                print(f"Your answer is wrong, the correct answer is {answer}")
+                return False
+            elif userInput == answer and int(time()) - startTime > 5:
+                print(f"Your answer is correct, but you took too long to answer, you have 5 seconds to answer.")
+                return False
 
 
 class day:
@@ -155,6 +231,9 @@ class day:
 
 
 def wait(duration: int):
+    """
+    A function for waiting a specified amount of time and prints fullstops (to please the user)
+    """
     for i in range(duration):
         sleep(1)
         print(".", end="")
@@ -173,7 +252,7 @@ class battle:
     def __init__(self, *characters: Character) -> None:
         pass
 
-    def start(self, *characters: Character):
+    def start(self, *characters: Character) -> bool:
 
         self.friendlyCharacters = []
         self.hostileCharacters = []
@@ -192,12 +271,13 @@ class battle:
                 if whoGoesFirst == 0:  # if the coinflip returns 0 then it skips the friendlies turn for the first round, making the hostiles go first
                     whoGoesFirst = 1
                     break
-                if fC.MC:  # if the friendly character is the main character give them some choices on the attack
+                if fC.MC and fC.alive:  # if the friendly character is the main character give them some choices on the attack
                     wait(1)
                     print_lines(
                         f"1 - Basic Attack: {fC.equippedWeapon.damage} (chance of doing half damage with opponents defence)",
                         f"2 - Psychic Attack: {fC.equippedWeapon.PP}",
                         f"3 - Analyse - Grants increased critical chance for the next turn",
+                        f"4 - Use an item from your inventory",
                         f"HP: {fC.HP} | PP: {fC.PP}"
                     )
                     IN = input("> ")
@@ -224,6 +304,8 @@ class battle:
                                     f"You don't have enough PP to use this attack, {fC.PP} when you need {fC.equippedWeapon.PP / 2}")
                     elif IN == "3":
                         print("Increased critical chance for next turn. RN this is complete cap tho")
+                    elif IN == "4":
+                        fC.selectItem()
 
                 else:  # if the character isn't a main character we just do the damage that their weapon does
                     for hC in self.hostileCharacters:
@@ -277,8 +359,16 @@ def main():
 
     currentDay = day(True, False)
 
-    MainCharacter = Character(100, 100, 100, 100, 10, {Weapon(20, 20, "Cursed Sword"): 1}, True, True, Weapon(20, 20),
+    MainCharacter = Character(100, 100, 100, 100, 10, [Weapon(20, 20, "Cursed Sword"), HealthPot(20, "Medium Healing")], True, True, Weapon(20, 20),
                               True, input("What is your name? "))
+
+    if MainCharacter.name.lower() == "orth":
+        MainCharacter.inventory.append(Weapon(69e+42, 1000, f"{col.Fore.RED}SWORD OF ORTH{col.Fore.RESET}"))
+        MainCharacter.inventory.append(HealthPot(5000, f"{col.Fore.RED}HEALTH POT OF ORTH{col.Fore.RESET}"))
+        print(f"{col.Fore.RED}ORTH IS BLESSED BY THE HEAVENS")
+        MainCharacter.showInventory()
+        wait(5)
+
     print(
         "You have recently moved to a new school for study, and you have a free period and decide to go straight to "
         "your dorm.\nYou walk into your dorm and see a student who introduces himself to you as your roommate, Xavier")
@@ -286,10 +376,8 @@ def main():
     system('cls')
     print("You begin your school day")
     wait(2)
-    if school():
-        MainCharacter.maxPP += 10
-        MainCharacter.PP += 10
-        print("You have gained 10 PP")
+
+    school(MainCharacter)
 
     if currentDay.apparition:
         print("You hear rumours around the school about a missing student, nobody knows where they are")
@@ -311,11 +399,12 @@ def main():
         sleep(0.4)
         imageToAscii.terminalDefault()
         print("Battle Starting", end="")
-        enemy = Character(100, 100, 100, 100, 10, {}, False, False, Weapon(10, 10), True, "Thicc enemy dumptruck")
-        enemy2 = Character(100, 100, 100, 100, 10, {}, False, False, Weapon(10, 10), True, "not as thicc enemy")
-        friend1 = Character(100, 100, 100, 100, 100, {}, True, False, Weapon(20, 20), True, "Xavier")
+        enemy = Character(100, 100, 100, 100, 10, [], False, False, Weapon(10, 10), True, "enemy dumptruck")
+        enemy2 = Character(100, 100, 100, 100, 10, [], False, False, Weapon(10, 10), True, "the enemy")
+        friend1 = Character(100, 100, 100, 100, 100, [], True, False, Weapon(20, 10), True, "Xavier")
         wait(2)
-        battle().start(MainCharacter, friend1, enemy, enemy2)
+        if not battle().start(MainCharacter, friend1, enemy, enemy2):
+            print("asrtoairesntoarseitnoairsetnoairsentoairsentasorie yyou died lmaiii")
 
     input(vars(MainCharacter))
 
