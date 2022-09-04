@@ -335,6 +335,11 @@ def print_lines(*lines: str):
     """
     print("\n".join([line for line in lines]))
 
+def die():
+    imageToAscii.imageToAscii("youdied.jpg")
+    input("You died, press enter to exit")
+    exit()
+
 
 class battle:
     def __init__(self, *characters: Character) -> None:
