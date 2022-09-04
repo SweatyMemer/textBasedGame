@@ -185,6 +185,7 @@ def imageToAscii(path, new_width = desired_width, Print = True, output_file = NU
         changeFontSize(2)
         terminalSize(new_width, round(new_width * get_ratio(image)))
         print(ascii_image)
+        input()
         
     if output_file != NULL:
         with open(output_file, "a") as f:
