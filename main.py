@@ -10,6 +10,7 @@ from winsound import Beep
 from csv import reader
 import keyboard
 
+
 col.init(autoreset=True)
 
 
@@ -335,6 +336,7 @@ def print_lines(*lines: str):
     """
     print("\n".join([line for line in lines]))
 
+
 def die():
     imageToAscii.imageToAscii("youdied.jpg")
     input("You died, press enter to exit")
@@ -420,6 +422,7 @@ class battle:
             result = all(not obj.alive for obj in self.friendlyCharacters)
             if result:
                 print("Your party has been defeated!")
+                die()
                 return False  # if all friendlies are dead return False, a failure
             else:
                 pass
@@ -719,6 +722,7 @@ def navigateMirrorWorld(MainCharacter: Character):
         if randint(0, 50) == 1:
             displayImage(imageArray[ImageClass.monster])
             sleep(1)
+            imageToAscii.terminalDefault()
             battle().start(MainCharacter, *pickRandomHostiles(3, 2), MainCharacter, sideCharacters.Xavier)
 
     def turnRight():
@@ -731,6 +735,7 @@ def navigateMirrorWorld(MainCharacter: Character):
         if randint(0, 50) == 1:
             displayImage(imageArray[ImageClass.monster])
             sleep(1)
+            imageToAscii.terminalDefault()
             battle().start(MainCharacter, *pickRandomHostiles(3, 2), MainCharacter, sideCharacters.Xavier)
 
     displayImage(mirrorWorldMap[pos.y][pos.x][pos.facing])
@@ -796,7 +801,7 @@ def home(MainCharacter: Character):
             print(f"{numbers[0]}, {numbers[1]}, {numbers[2]}")
             return numbers
 
-        def checkSlotNumbers(numbers: list[int]):
+        def checkSlotNumbers(numbers: List[int]):
             countX = lambda lst, x: lst.count(x)
             for number in numbers:
                 if countX(numbers, number) == 2:
